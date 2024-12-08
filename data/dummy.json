@@ -1,0 +1,32 @@
+{
+    "Bookings": [
+      {
+        "PASSENGERS": [
+          {
+            "Name": "John Doe",
+            "Age": 30,
+            "Gender": "Male",
+            "Country": "USA",
+            "State": "California"
+          },
+          {
+            "Name": "Jane Doe",
+            "Age": 28,
+            "Gender": "Female",
+            "Country": "USA",
+            "State": "California"
+          }
+        ],
+        "Journey_Date": "2024-12-10",
+        "PAYER": {
+          "full_name": "John Doe",
+          "email": "johndoe@example.com",
+          "phone": "+123456789",
+          "Amount": 500,
+          "T-ID": "TRX123456"
+        },
+        "Status": "Pending"
+      }
+    ]
+  }
+  
