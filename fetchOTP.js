@@ -1,32 +1,27 @@
-const { exec } = require('child_process');
+import fetch from 'node-fetch';
 
-// Use the full path to adb
-const adbPath = 'C:\\Users\\ansug\\Desktop\\platform-tools\\adb.exe';
+const ANDROID_IP = '192.0.0.4'; // Replace with your Android device's IP address
+const PORT = 8080; // Replace with the port your Android app is using
+const ENDPOINT = `http://${ANDROID_IP}:${PORT}/messages`;
 
-function getSmsContent() {
-    return new Promise((resolve, reject) => {
-        exec(`${adbPath} -s RZ8N10VHCSJ shell content query --uri content://sms/inbox`, (error, stdout, stderr) => {
-            if (error) {
-                console.error(`Error executing command: ${error}`);
-                reject(error);
-            } else {
-                const otpMatch = stdout.match(/body=(.*?)(?:,|$)/);
-                if (otpMatch && otpMatch[1]) {
-                    const otp = otpMatch[1].replace(/[^0-9]/g, ''); // Extract only digits
-                    resolve(otp);
-                } else {
-                    reject('OTP not found');
-                }
-            }
-        });
-    });
+async function fetchMessages() {
+  try {
+    console.log('Fetching messages from Android device...');
+    const response = await fetch(ENDPOINT);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const messages = await response.json();
+    
+    console.log('Messages received:');
+    console.log(JSON.stringify(messages, null, 2));
+    
+    // Here you can process the messages further, save to a file, etc.
+  } catch (error) {
+    console.error('Error fetching messages:', error.message);
+  }
 }
 
-(async () => {
-    try {
-        const otp = await getSmsContent();
-        console.log(`Received OTP: ${otp}`);
-    } catch (error) {
-        console.error(`Failed to extract OTP: ${error}`);
-    }
-})();
+fetchMessages();

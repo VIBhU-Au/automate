@@ -1,11 +1,12 @@
 const { chromium } = require('playwright');
 const path = require('path');
+require('dotenv').config();
 
 // Dummy JSON for transport date
 const jsonData = {
     Journey_Date: { date: "2024-12-25" }, // Replace this dynamically from other JSONs
 };
-
+const phoneNumber = process.env.DEMO_PHONE_NUMBER;
 // Path to Chrome user profile directory
 const userDataDir = 'C:\\Users\\ansug\\AppData\\Local\\Google\\Chrome\\User Data\\Profile 10'; // Ensure this path is correct
 
@@ -26,7 +27,7 @@ const userDataDir = 'C:\\Users\\ansug\\AppData\\Local\\Google\\Chrome\\User Data
 
     // Perform parallel operations
     await Promise.all([
-        
+
         (async () => {   // Transport Page: Perform operations
             const transportURL = `https://www.abhibus.com/bus_search/Baroda/672/Statue%20of%20Unity%20(Navagam)/11405/${jsonData.Journey_Date.date}/O`;
             await transportPage.goto(transportURL);
@@ -34,40 +35,53 @@ const userDataDir = 'C:\\Users\\ansug\\AppData\\Local\\Google\\Chrome\\User Data
 
             const pages = browser.pages();
             if (pages.length > 0 && pages[0].url() === 'about:blank') {
-                await pages[0].close();
-                await pages[1].close();
+                // Optional: Keeping this blank tab can help in maintaining browser state
+                // await pages[0].close();
+                // await pages[1].close();
             }
 
-            // Wait for the "Login/SignUp" button to be visible and interactable
-            await transportPage.waitForSelector('a#login-link');
-            // Click the "Login/SignUp" button
-            await transportPage.click('a#login-link');
-            console.log('Login/SignUp button clicked successfully.');
+            // Dynamically handle login or seat selection
+            // const 'a#login-link' = ''a#login-link''; // Login/SignUp button selector
+            // const button.btn.bus-info-btn.filled.primary.sm.inactive.button = 'button.btn.bus-info-btn.filled.primary.sm.inactive.button'; // Select Seats button selector
 
-            // Input a 10-digit phone number into the phone number field
-            await transportPage.fill('input.true.mobileNo-input', '9876543210');
-            console.log('Phone number entered successfully.');
+            // Check which element is visible: Login/SignUp or Select Seats
+            if (await transportPage.isVisible('a#login-link')) {
+                console.log('Login button detected. Proceeding with login flow.');
 
-            // Wait for the "Login" button to be visible and interactable
-            await transportPage.waitForSelector('button.btn.btn-login.filled.primary.md.inactive.button');
-            // Click the "Login" button
-            await transportPage.click('button.btn.btn-login.filled.primary.md.inactive.button');
-            console.log('Login button clicked successfully.');
+                // Click the "Login/SignUp" button
+                await transportPage.click('a#login-link');
+                console.log('Login/SignUp button clicked successfully.');
 
-            // Array of OTP digits to be entered
-            const otp = ['4', '6', '4', '6', '4', '6'];
+                // Input a 10-digit phone number into the phone number field
+                const phoneNumberSelector = 'input.true.mobileNo-input'; // Phone number input field selector
+                await transportPage.fill(phoneNumberSelector, process.env.DEMO_PHONE_NUMBER);
+                console.log('Phone number entered successfully.');
 
-            // Loop through the OTP input fields and fill each one
-            for (let i = 0; i < otp.length; i++) {
-                await transportPage.fill(`.otp-input .otp-pill:nth-child(${i + 1})`, otp[i]);
+                // Wait for the "Login" button to be visible and interactable
+                const loginButtonSelector = 'button.btn.btn-login.filled.primary.md.inactive.button'; // Login button selector
+                await transportPage.click(loginButtonSelector);
+                console.log('Login button clicked successfully.');
+
+                // Optionally handle OTP here if needed (currently commented)
+                // const otp = ['4', '6', '4', '6', '4', '6'];
+                // for (let i = 0; i < otp.length; i++) {
+                //     await transportPage.fill(`.otp-input .otp-pill:nth-child(${i + 1})`, otp[i]);
+                // }
+                // console.log('OTP entered successfully.');
+
+                // Wait for the "Sign in with Google" button to disappear
+                console.log('Waiting for the "Sign in with Google" button to disappear...');
+                await transportPage.waitForSelector('a#login-google-link', { state: 'hidden' });
+                console.log('"Sign in with Google" button has disappeared. Continuing with the next steps.');
             }
-
-            console.log('OTP entered successfully.');
-
+            console.log('Select Seats button detected. Proceeding with seat selection.');
+            // Click the "Select Seats" button
+            await transportPage.click('button.btn.bus-info-btn.filled.primary.sm.inactive.button');
+            console.log('Select Seats button clicked successfully.');
 
             console.log('Transport page actions completed.');
         })(),
-        
+
         (async () => {   // Attraction Page: Perform operations
             const attractionURL = 'https://www.soutickets.in/#/dashboard';
             await attractionPage.goto(attractionURL);
@@ -111,11 +125,9 @@ const userDataDir = 'C:\\Users\\ansug\\AppData\\Local\\Google\\Chrome\\User Data
             console.log('Tourist attraction page actions completed.');
         })(),
     ]);
-
-    console.log('Both tab operations completed.');
-
-    // Optional: Prevent accidental closure
     dummyPage.on('close', () => {
         console.log('Dummy page closed. Browser will remain open.');
     });
+    console.log('Both tab operations completed.');
+
 })();
